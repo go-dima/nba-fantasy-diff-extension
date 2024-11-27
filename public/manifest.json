@@ -3,6 +3,11 @@
   "name": "Table Diff Extension",
   "version": "1.0.0",
   "description": "Adds difference column to tables",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": ["activeTab"],
   "content_scripts": [
     {
