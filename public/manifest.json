@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Table Diff Extension",
-  "version": "1.0.0",
-  "description": "Adds difference column to tables",
+  "name": "NBA Fantasy Extension",
+  "version": "1.0.1",
+  "description": "Enhance the NBA Fantasy website",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

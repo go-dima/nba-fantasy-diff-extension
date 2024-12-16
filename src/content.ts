@@ -1,3 +1,4 @@
+import { updatePitchElements } from "./pitch";
 import { calculateDiff, formatNumber } from "./utils/numbers";
 
 const addDiffColumn = () => {
@@ -40,11 +41,16 @@ const addDiffColumn = () => {
   });
 };
 
+const handleContentChanges = () => {
+  addDiffColumn();
+  updatePitchElements();
+};
+
 // Handle dynamic content
 const observer = new MutationObserver((mutations) => {
   mutations.forEach((mutation) => {
     if (mutation.addedNodes.length) {
-      addDiffColumn();
+      handleContentChanges();
     }
   });
 });
@@ -52,14 +58,14 @@ const observer = new MutationObserver((mutations) => {
 // Initial run
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    addDiffColumn();
+    handleContentChanges();
     observer.observe(document.body, {
       childList: true,
       subtree: true,
     });
   });
 } else {
-  addDiffColumn();
+  handleContentChanges();
   observer.observe(document.body, {
     childList: true,
     subtree: true,
