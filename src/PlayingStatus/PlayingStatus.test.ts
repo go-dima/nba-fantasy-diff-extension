@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { updatePitchElements } from "../src/pitch";
-import { SELECTORS, STYLES } from "../src/pitch.consts";
+import { SELECTORS, STYLES, UpdatePlayingStatus } from ".";
 
-describe("updatePitchElements", () => {
+describe("UpdatePlayingStatus", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
   });
@@ -19,7 +18,7 @@ describe("updatePitchElements", () => {
       </div>
     `;
 
-    updatePitchElements();
+    UpdatePlayingStatus();
     const cardElement = document.querySelector(SELECTORS.CARD_ELEMENT);
     expect(cardElement?.getAttribute("style")).toBe(STYLES.DISABLED_ELEMENT);
   });
@@ -36,7 +35,7 @@ describe("updatePitchElements", () => {
       </div>
     `;
 
-    updatePitchElements();
+    UpdatePlayingStatus();
     const parentElement = document.querySelector(
       SELECTORS.PARENT_PITCH_ELEMENT
     );

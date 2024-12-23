@@ -1,6 +1,6 @@
-import { SELECTORS, STYLES } from "./pitch.consts";
+import { SELECTORS, STYLES } from "./PlayingStatus.consts";
 
-export const updatePitchElements = () => {
+export const UpdatePlayingStatus = () => {
   const pitchElements = document.querySelectorAll(
     SELECTORS.PARENT_PITCH_ELEMENT
   );
