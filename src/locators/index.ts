@@ -2,3 +2,4 @@
 // Update here when site markup changes.
 export * from "./lineup";
 export * from "./standings";
+export * from "./transfers";
