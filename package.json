@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "watch": "vite build --watch",
+    "build": "vite build && vite build --mode page",
+    "watch": "vite build --watch & vite build --mode page --watch",
     "test": "tsc --noEmit && jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit"
