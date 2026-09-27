@@ -66,18 +66,18 @@ export const buildWeek = (
   });
 };
 
-export type GameCount = { remaining: number; total: number };
-
-// Games per team code across the week; remaining excludes past days
-export const countGames = (week: Day[]): Map<number, GameCount> => {
-  const counts = new Map<number, GameCount>();
-  week.forEach((day) => {
-    day.opponents.forEach((opponents, code) => {
-      const count = counts.get(code) ?? { remaining: 0, total: 0 };
-      count.total += opponents.length;
-      if (!day.past) count.remaining += opponents.length;
-      counts.set(code, count);
+// Day numbers (1-7) each team code plays in the week, optionally
+// skipping days whose deadline has passed
+export const gameDays = (
+  week: Day[],
+  { remainingOnly = false } = {}
+): Map<number, number[]> => {
+  const days = new Map<number, number[]>();
+  week.forEach((day, i) => {
+    if (remainingOnly && day.past) return;
+    day.opponents.forEach((_, code) => {
+      days.set(code, [...(days.get(code) ?? []), i + 1]);
     });
   });
-  return counts;
+  return days;
 };

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 import { DAY, START, bootstrap } from "./__fixtures__/bootstrap";
-import { buildWeek, countGames } from "./schedule";
+import { buildWeek, gameDays } from "./schedule";
 
 describe("buildWeek", () => {
   test("always returns 7 days, marking days beyond the gameweek as missing", () => {
@@ -42,18 +42,26 @@ describe("buildWeek", () => {
   });
 });
 
-describe("countGames", () => {
-  test("counts total and remaining games per team code", () => {
-    const fixtures = [
-      { event: 1, team_h: 1, team_a: 2 },
-      { event: 3, team_h: 3, team_a: 1 },
-      { event: 5, team_h: 1, team_a: 3 },
-    ];
-    const now = (START + 1 * DAY) * 1000; // days 1-2 are past
-    const counts = countGames(buildWeek(bootstrap, fixtures, 1, now));
+describe("gameDays", () => {
+  const fixtures = [
+    { event: 1, team_h: 1, team_a: 2 },
+    { event: 3, team_h: 3, team_a: 1 },
+    { event: 5, team_h: 1, team_a: 3 },
+  ];
 
-    expect(counts.get(1610612737)).toEqual({ remaining: 2, total: 3 });
-    expect(counts.get(1610612738)).toEqual({ remaining: 0, total: 1 });
-    expect(counts.get(1610612751)).toEqual({ remaining: 2, total: 2 });
+  test("lists the day numbers each team plays", () => {
+    const days = gameDays(buildWeek(bootstrap, fixtures, 1, 0));
+
+    expect(days.get(1610612737)).toEqual([1, 3, 5]);
+    expect(days.get(1610612738)).toEqual([1]);
+    expect(days.get(1610612751)).toEqual([3, 5]);
+  });
+
+  test("can skip days whose deadline has passed", () => {
+    const now = (START + 1 * DAY) * 1000; // days 1-2 are past
+    const days = gameDays(buildWeek(bootstrap, fixtures, 1, now), { remainingOnly: true });
+
+    expect(days.get(1610612737)).toEqual([3, 5]);
+    expect(days.has(1610612738)).toBe(false);
   });
 });
