@@ -8,7 +8,7 @@ const { DASH, logo } = cells;
 const ATL = 1610612737;
 
 const mockApi = () => {
-  const fetchMock = jest.fn(async (url: string) => ({
+  const fetchMock = jest.fn(async (url: string, _init?: RequestInit) => ({
     ok: true,
     status: 200,
     json: async () =>
@@ -19,7 +19,7 @@ const mockApi = () => {
             { event: 5, team_h: 3, team_a: 1 },
           ],
   }));
-  global.fetch = fetchMock as unknown as typeof fetch;
+  globalThis.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;
 };
 
@@ -99,7 +99,7 @@ describe("ShowFullWeek", () => {
   });
 
   test("does nothing when the API fails", async () => {
-    global.fetch = jest.fn(async () => ({ ok: false, status: 500 })) as unknown as typeof fetch;
+    globalThis.fetch = jest.fn(async () => ({ ok: false, status: 500 })) as unknown as typeof fetch;
 
     await ShowFullWeek();
 
