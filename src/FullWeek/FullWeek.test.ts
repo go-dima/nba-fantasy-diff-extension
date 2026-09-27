@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { ShowFullWeek } from ".";
 import { cells, transfersTable } from "../locators/__fixtures__/transfers";
-import { clearWeekDataCache } from "./api";
-import { bootstrap } from "./__fixtures__/bootstrap";
+import { clearWeekDataCache } from "../schedule";
+import { bootstrap } from "../schedule/__fixtures__/bootstrap";
 
 const { DASH, logo } = cells;
 const ATL = 1610612737;

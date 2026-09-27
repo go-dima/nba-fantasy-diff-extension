@@ -1,11 +1,13 @@
 import { ShowFullWeek } from "./FullWeek";
 import { UpdatePlayingStatus } from "./PlayingStatus";
 import { AddDiffColumn } from "./TableDiff";
+import { ShowWeekGames } from "./WeekGames";
 
 const handleContentChanges = () => {
   AddDiffColumn();
   UpdatePlayingStatus();
   void ShowFullWeek();
+  void ShowWeekGames();
 };
 
 // Handle dynamic content

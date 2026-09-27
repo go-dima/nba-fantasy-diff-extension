@@ -1,6 +1,5 @@
 import { EXT_DAY_ATTR, TransfersTable, findTransfersTables } from "../locators";
-import { loadWeekData } from "./api";
-import { Day, buildWeek } from "./schedule";
+import { Day, buildWeek, loadWeekData } from "../schedule";
 
 const EXT_TEAM_ATTR = "data-nbafx-team";
 
