@@ -1,5 +1,17 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { SELECTORS, STYLES, UpdatePlayingStatus } from ".";
+import { STYLES, UpdatePlayingStatus } from ".";
+import { findLineupPlayers } from "../locators";
+
+const playerCard = (fixture: string) => /* html */ `
+  <div variant="" class="sc-bmxOz">
+    <div class="sc-iunwHu">
+      <div elementtype="2" class="sc-eqNcPs">
+        <div elementtypeid="2">Next</div>
+        <div elementtypeid="2">${fixture}</div>
+      </div>
+    </div>
+  </div>
+`;
 
 describe("UpdatePlayingStatus", () => {
   beforeEach(() => {
@@ -7,38 +19,21 @@ describe("UpdatePlayingStatus", () => {
   });
 
   test('applies disabled style when fixture field is "-"', () => {
-    document.body.innerHTML = /* html */ `
-      <div class="Pitch__PitchElementInner-sc-z4xh31-4 ipHIqU">
-        <div class="ElementCard__ElementCardMain-sc-7e8ocu-0 caFlMC">
-          <div class="PitchElementFixtures__NextFixtureWrapper-sc-1dwbi13-1 lauZne">
-            <div class="PitchElementFixtures__FixtureField-sc-1dwbi13-2 hvofAh">Next</div>
-            <div class="PitchElementFixtures__FixtureField-sc-1dwbi13-2 hvofAh">-</div>
-          </div>
-        </div>
-      </div>
-    `;
+    document.body.innerHTML = playerCard("-");
 
     UpdatePlayingStatus();
-    const cardElement = document.querySelector(SELECTORS.CARD_ELEMENT);
-    expect(cardElement?.getAttribute("style")).toBe(STYLES.DISABLED_ELEMENT);
+    const [{ card }] = findLineupPlayers();
+    expect(card.getAttribute("style")).toBe(STYLES.DISABLED_ELEMENT);
   });
 
   test('applies active style when fixture field is not "-"', () => {
-    document.body.innerHTML = /* html */ `
-      <div class="Pitch__PitchElementInner-sc-z4xh31-4 ipHIqU">
-        <div class="ElementCard__ElementCardMain-sc-7e8ocu-0 caFlMC">
-          <div class="PitchElementFixtures__NextFixtureWrapper-sc-1dwbi13-1 lauZne">
-            <div class="PitchElementFixtures__FixtureField-sc-1dwbi13-2 hvofAh">Next</div>
-            <div class="PitchElementFixtures__FixtureField-sc-1dwbi13-2 hvofAh">SAS</div>
-          </div>
-        </div>
-      </div>
-    `;
+    document.body.innerHTML = playerCard(
+      '<img alt="Oklahoma City Thunder" src="okc.png">'
+    );
 
     UpdatePlayingStatus();
-    const parentElement = document.querySelector(
-      SELECTORS.PARENT_PITCH_ELEMENT
-    );
-    expect(parentElement?.getAttribute("style")).toBe(STYLES.ACTIVE_ELEMENT);
+    const [{ card }] = findLineupPlayers();
+    expect(card.getAttribute("style")).toBe(STYLES.ACTIVE_ELEMENT);
+    expect(card.closest("[variant]")?.getAttribute("style")).toBeNull();
   });
 });

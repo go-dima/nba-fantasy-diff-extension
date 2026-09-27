@@ -1,31 +1,11 @@
-import { SELECTORS, STYLES } from "./PlayingStatus.consts";
+import { findLineupPlayers } from "../locators";
+import { STYLES } from "./PlayingStatus.consts";
 
 export const UpdatePlayingStatus = () => {
-  const pitchElements = document.querySelectorAll(
-    SELECTORS.PARENT_PITCH_ELEMENT
-  );
-  if (!pitchElements.length) return;
-
-  pitchElements.forEach((pitch) => {
-    const cardElement = pitch.querySelector(SELECTORS.CARD_ELEMENT);
-    if (!cardElement) return;
-
-    const fixtureWrapper = pitch.querySelector(
-      '[class^="PitchElementFixtures__NextFixtureWrapper"]'
+  findLineupPlayers().forEach(({ card, hasNextFixture }) => {
+    card.setAttribute(
+      "style",
+      hasNextFixture ? STYLES.ACTIVE_ELEMENT : STYLES.DISABLED_ELEMENT
     );
-    if (!fixtureWrapper) return;
-
-    const fixtureFields = fixtureWrapper.querySelectorAll(
-      '[class^="PitchElementFixtures__FixtureField"]'
-    );
-    if (fixtureFields.length < 2) return;
-
-    const secondFixtureField = fixtureFields[1];
-
-    if (secondFixtureField.textContent?.trim() === "-") {
-      cardElement.setAttribute("style", STYLES.DISABLED_ELEMENT);
-    } else {
-      pitch.setAttribute("style", STYLES.ACTIVE_ELEMENT);
-    }
   });
 };
