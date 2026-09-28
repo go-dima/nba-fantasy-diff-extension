@@ -1,6 +1,8 @@
 // Cells added by the extension carry this attribute so they are never
 // mistaken for the site's own columns.
 export const EXT_DAY_ATTR = "data-nbafx-day";
+// Header row added by the extension above the site's header row
+export const EXT_NAV_ATTR = "data-nbafx-nav";
 
 const DAY_HEADER = /^GW(\d+)\.\d+$/;
 
@@ -14,6 +16,8 @@ export type TransfersTable = {
   gameweek: number;
   // Indexes of the site's own "GWx.y" columns
   siteDayColumns: number[];
+  // The site's other (non-day) header cells, which precede the days
+  otherHeaders: HTMLTableCellElement[];
   rows: TransfersRow[];
   templates: {
     header: HTMLTableCellElement;
@@ -31,7 +35,9 @@ export const findTransfersTables = (
   const tables: TransfersTable[] = [];
 
   root.querySelectorAll("table").forEach((table) => {
-    const headerRow = table.querySelector<HTMLTableRowElement>("thead tr");
+    const headerRow = table.querySelector<HTMLTableRowElement>(
+      `thead tr:not([${EXT_NAV_ATTR}])`
+    );
     if (!headerRow) return;
 
     const cells = Array.from(headerRow.cells);
@@ -59,6 +65,9 @@ export const findTransfersTables = (
       headerRow,
       gameweek,
       siteDayColumns,
+      otherHeaders: cells.filter(
+        (th, index) => isSiteCell(th) && !siteDayColumns.includes(index)
+      ),
       rows,
       templates: {
         header,

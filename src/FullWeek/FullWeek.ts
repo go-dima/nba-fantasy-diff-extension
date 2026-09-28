@@ -1,7 +1,20 @@
 import { EXT_DAY_ATTR, TransfersTable, findTransfersTables } from "../locators";
-import { Day, buildWeek, loadWeekData } from "../schedule";
+import {
+  DAYS_PER_WEEK,
+  Day,
+  buildWeek,
+  findGameweekPhase,
+  loadWeekData,
+} from "../schedule";
+import { NavState, renderNav } from "./nav";
 
-const EXT_TEAM_ATTR = "data-nbafx-team";
+// "<gameweek>:<team code>" the row's cells were rendered for
+const EXT_KEY_ATTR = "data-nbafx-key";
+
+// Gameweeks ahead (+) or behind (-) the site's current one
+let offset = 0;
+// Only the latest render may touch the DOM
+let latestRun = 0;
 
 const STYLES = {
   PAST_DAY: "filter: grayscale(100%) opacity(50%);",
@@ -27,14 +40,20 @@ const hide = (cell: HTMLElement | undefined) => {
 
 const renderHeader = (table: TransfersTable, week: Day[]) => {
   const { headerRow, templates } = table;
-  if (headerRow.querySelector(`[${EXT_DAY_ATTR}]`)) return;
+  let own = Array.from(headerRow.querySelectorAll<HTMLElement>(`[${EXT_DAY_ATTR}]`));
+  if (!own.length) {
+    own = week.map((_, i) => {
+      const th = templates.header.cloneNode(false) as HTMLTableCellElement;
+      th.setAttribute(EXT_DAY_ATTR, String(i + 1));
+      headerRow.appendChild(th);
+      return th;
+    });
+  }
 
   week.forEach((day, i) => {
-    const th = templates.header.cloneNode(false) as HTMLTableCellElement;
-    th.setAttribute(EXT_DAY_ATTR, String(i + 1));
-    th.setAttribute("style", dayStyle(day));
-    th.textContent = day.label;
-    headerRow.appendChild(th);
+    const style = dayStyle(day);
+    if (own[i].textContent !== day.label) own[i].textContent = day.label;
+    if ((own[i].getAttribute("style") ?? "") !== style) own[i].setAttribute("style", style);
   });
 };
 
@@ -63,47 +82,73 @@ const renderCell = (table: TransfersTable, day: Day, teamCode: number | null) =>
   return td;
 };
 
-const renderRows = (table: TransfersTable, week: Day[]) => {
+const renderRows = (table: TransfersTable, gameweek: number, week: Day[]) => {
   table.rows.forEach(({ row, teamCode }) => {
+    const key = `${gameweek}:${teamCode}`;
     const own = row.querySelectorAll(`[${EXT_DAY_ATTR}]`);
-    if (own.length && own[0].getAttribute(EXT_TEAM_ATTR) === String(teamCode)) {
-      return;
-    }
+    if (own.length && own[0].getAttribute(EXT_KEY_ATTR) === key) return;
     own.forEach((cell) => cell.remove());
 
     week.forEach((day, i) => {
       const td = renderCell(table, day, teamCode);
       td.setAttribute(EXT_DAY_ATTR, String(i + 1));
-      td.setAttribute(EXT_TEAM_ATTR, String(teamCode));
+      td.setAttribute(EXT_KEY_ATTR, key);
       row.appendChild(td);
     });
   });
 };
 
-const render = (table: TransfersTable, week: Day[]) => {
+const render = (table: TransfersTable, gameweek: number, week: Day[]) => {
   table.siteDayColumns.forEach((index) => {
     hide(table.headerRow.cells[index]);
     table.rows.forEach(({ row }) => hide(row.cells[index]));
   });
   renderHeader(table, week);
-  renderRows(table, week);
+  renderRows(table, gameweek, week);
+};
+
+const navigate = (to: (offset: number) => number) => {
+  offset = to(offset);
+  void ShowFullWeek();
+};
+
+const actions = {
+  prev: () => navigate((o) => o - 1),
+  next: () => navigate((o) => o + 1),
+  current: () => navigate(() => 0),
 };
 
 export const ShowFullWeek = async () => {
+  const run = ++latestRun;
   const [first] = findTransfersTables();
-  if (!first) return;
-
-  const { gameweek } = first;
-  let week: Day[];
-  try {
-    const { bootstrap, fixtures } = await loadWeekData(gameweek);
-    week = buildWeek(bootstrap, fixtures, gameweek);
-  } catch {
+  if (!first) {
+    // Left the transfers page: start from this week next time
+    offset = 0;
     return;
   }
 
+  const siteGameweek = first.gameweek;
+  const gameweek = siteGameweek + offset;
+  let week: Day[];
+  let nav: NavState;
+  try {
+    const { bootstrap, fixtures } = await loadWeekData(gameweek);
+    week = buildWeek(bootstrap, fixtures, gameweek);
+    nav = {
+      gameweek,
+      hasPrev: !!findGameweekPhase(bootstrap, gameweek - 1),
+      hasNext: !!findGameweekPhase(bootstrap, gameweek + 1),
+      isCurrent: offset === 0,
+    };
+  } catch {
+    return;
+  }
+  if (run !== latestRun) return;
+
   // The DOM may have changed while loading
-  findTransfersTables()
-    .filter((table) => table.gameweek === gameweek)
-    .forEach((table) => render(table, week));
+  const tables = findTransfersTables().filter(
+    (table) => table.gameweek === siteGameweek
+  );
+  tables.forEach((table) => render(table, gameweek, week));
+  if (tables[0]) renderNav(tables[0], nav, actions, DAYS_PER_WEEK);
 };

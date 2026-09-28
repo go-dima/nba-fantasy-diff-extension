@@ -7,17 +7,22 @@ import { bootstrap } from "../schedule/__fixtures__/bootstrap";
 const { DASH, logo } = cells;
 const ATL = 1610612737;
 
+// Gameweek 1 = events 1-6, gameweek 2 = events 7-13, no gameweek 3
+const fixtures = [
+  { event: 2, team_h: 1, team_a: 2 },
+  { event: 5, team_h: 3, team_a: 1 },
+  { event: 8, team_h: 2, team_a: 1 }, // GW2.2
+];
+
 const mockApi = () => {
   const fetchMock = jest.fn(async (url: string, _init?: RequestInit) => ({
     ok: true,
     status: 200,
-    json: async () =>
-      url.includes("bootstrap-static")
-        ? bootstrap
-        : [
-            { event: 2, team_h: 1, team_a: 2 },
-            { event: 5, team_h: 3, team_a: 1 },
-          ],
+    json: async () => {
+      if (url.includes("bootstrap-static")) return bootstrap;
+      const phase = bootstrap.phases.find((p) => url.endsWith(`phase=${p.id}`))!;
+      return fixtures.filter((f) => f.event >= phase.start_event && f.event <= phase.stop_event);
+    },
   }));
   globalThis.fetch = fetchMock as unknown as typeof fetch;
   return fetchMock;
@@ -26,8 +31,17 @@ const mockApi = () => {
 const own = (selector: string) =>
   Array.from(document.querySelectorAll<HTMLElement>(`${selector}[data-nbafx-day]`));
 
+const navRow = () => document.querySelector<HTMLTableRowElement>("tr[data-nbafx-nav]");
+const navButton = (role: string) =>
+  navRow()!.querySelector<HTMLButtonElement>(`[data-nav="${role}"]`)!;
+const navLabel = () => navRow()!.querySelector('[data-nav="label"]')!.textContent;
+const alts = () => own("td").map((td) => td.querySelector("img")?.alt ?? null);
+
 describe("ShowFullWeek", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Leaving the transfers page resets the viewed week
+    document.body.innerHTML = "";
+    await ShowFullWeek();
     clearWeekDataCache();
     jest.useFakeTimers({ now: 0 });
     document.body.innerHTML = transfersTable(1, [
@@ -104,5 +118,82 @@ describe("ShowFullWeek", () => {
     await ShowFullWeek();
 
     expect(own("th")).toHaveLength(0);
+  });
+
+  describe("week navigation", () => {
+    test("adds a nav row above the day columns", async () => {
+      mockApi();
+      await ShowFullWeek();
+      await ShowFullWeek();
+
+      expect(document.querySelectorAll("tr[data-nbafx-nav]")).toHaveLength(1);
+      const row = navRow()!;
+      expect(row.nextElementSibling?.querySelector("th[data-nbafx-day]")).not.toBeNull();
+      expect(Array.from(row.cells).map((c) => c.colSpan)).toEqual([1, 1, 1, 1, 1, 7]);
+      expect(row.cells[1].className).toBe(document.querySelectorAll("thead tr")[1].children[1].className);
+      expect(navLabel()).toBe("Gameweek 1");
+      expect(navButton("prev").disabled).toBe(true);
+      expect(navButton("current").disabled).toBe(true);
+      expect(navButton("next").disabled).toBe(false);
+    });
+
+    test("moves forward and back to this week", async () => {
+      mockApi();
+      await ShowFullWeek();
+
+      navButton("next").click();
+      await ShowFullWeek();
+
+      expect(navLabel()).toBe("Gameweek 2");
+      expect(own("th").map((th) => th.textContent)).toEqual([
+        "GW2.1", "GW2.2", "GW2.3", "GW2.4", "GW2.5", "GW2.6", "GW2.7",
+      ]);
+      expect(own("th").every((th) => th.style.textDecoration === "")).toBe(true);
+      expect(alts()).toEqual([null, "Boston Celtics", null, null, null, null, null]);
+      expect(own("td")).toHaveLength(7);
+      expect(navButton("prev").disabled).toBe(false);
+      expect(navButton("next").disabled).toBe(true);
+      expect(navButton("current").disabled).toBe(false);
+
+      navButton("current").click();
+      await ShowFullWeek();
+
+      expect(navLabel()).toBe("Gameweek 1");
+      expect(own("th")[6].style.textDecoration).toBe("line-through");
+      expect(alts()).toEqual([null, "Boston Celtics", null, null, "Brooklyn Nets", null, null]);
+      expect(navButton("current").disabled).toBe(true);
+    });
+
+    test("moves both squad tables but shows one nav row", async () => {
+      document.body.innerHTML += transfersTable(1, [
+        { team: "ATL", code: ATL, days: [DASH, DASH, DASH, DASH, DASH] },
+      ]);
+      mockApi();
+      await ShowFullWeek();
+
+      navButton("next").click();
+      await ShowFullWeek();
+
+      expect(document.querySelectorAll("tr[data-nbafx-nav]")).toHaveLength(1);
+      const labels = Array.from(document.querySelectorAll("thead tr:not([data-nbafx-nav])")).map(
+        (tr) => tr.querySelector("th[data-nbafx-day]")?.textContent
+      );
+      expect(labels).toEqual(["GW2.1", "GW2.1"]);
+    });
+
+    test("greys out every day of a past gameweek", async () => {
+      document.body.innerHTML = transfersTable(2, [
+        { team: "ATL", code: ATL, days: [DASH, DASH, DASH, DASH, DASH] },
+      ]);
+      mockApi();
+      jest.setSystemTime(bootstrap.events[6].deadline_time_epoch * 1000);
+      await ShowFullWeek();
+
+      navButton("prev").click();
+      await ShowFullWeek();
+
+      expect(navLabel()).toBe("Gameweek 1");
+      expect(own("td").slice(0, 6).every((td) => td.style.filter !== "")).toBe(true);
+    });
   });
 });

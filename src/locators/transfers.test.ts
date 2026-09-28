@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { cells, transfersTable } from "./__fixtures__/transfers";
-import { EXT_DAY_ATTR, findTransfersTables } from "./transfers";
+import { EXT_DAY_ATTR, EXT_NAV_ATTR, findTransfersTables } from "./transfers";
 
 const { DASH, logo } = cells;
 
@@ -18,6 +18,7 @@ describe("findTransfersTables", () => {
     expect(rest).toHaveLength(0);
     expect(table.gameweek).toBe(3);
     expect(table.siteDayColumns).toEqual([5, 6, 7, 8, 9]);
+    expect(table.otherHeaders.map((th) => th.textContent?.trim())).toEqual(["", "Front Court", "SS", "F", "TP"]);
     expect(table.rows.map((r) => r.teamCode)).toEqual([1610612737]);
     expect(table.templates.header.textContent).toBe("GW3.1");
     expect(table.templates.cell?.className).toBe("sc-day");
@@ -34,6 +35,19 @@ describe("findTransfersTables", () => {
     headerRow.appendChild(own);
 
     expect(findTransfersTables()[0].siteDayColumns).toEqual([5, 6, 7, 8, 9]);
+  });
+
+  test("skips the extension's nav row when finding the header row", () => {
+    document.body.innerHTML = transfersTable(2, []);
+    const thead = document.querySelector("thead")!;
+    const nav = document.createElement("tr");
+    nav.setAttribute(EXT_NAV_ATTR, "");
+    nav.innerHTML = "<th>GW9.9</th>";
+    thead.insertBefore(nav, thead.firstChild);
+
+    const [table] = findTransfersTables();
+    expect(table.gameweek).toBe(2);
+    expect(table.headerRow.hasAttribute(EXT_NAV_ATTR)).toBe(false);
   });
 
   test("ignores tables without GW day headers", () => {
