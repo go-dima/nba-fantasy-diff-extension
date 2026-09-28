@@ -1,4 +1,4 @@
-import { Bootstrap } from "../schedule";
+import { Bootstrap } from "../api";
 
 export const DAY = 24 * 3600;
 export const START = 1_800_000_000;

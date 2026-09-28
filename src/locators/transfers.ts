@@ -12,7 +12,10 @@ export type TransfersRow = {
 };
 
 export type TransfersTable = {
+  head: HTMLTableSectionElement;
   headerRow: HTMLTableRowElement;
+  // The extension's nav row, when already added (goes before headerRow)
+  navRow: HTMLTableRowElement | null;
   gameweek: number;
   // Indexes of the site's own "GWx.y" columns
   siteDayColumns: number[];
@@ -25,6 +28,18 @@ export type TransfersTable = {
     logo: HTMLImageElement | null;
     noGame: Element | null;
   };
+};
+
+// Logos the site shows for teams, by NBA team code
+export const teamLogoUrl = (code: number) =>
+  `//cdn.nba.com/logos/nba/${code}/global/L/logo.svg`;
+
+// The table has a fixed layout with percentage column widths (e.g. 12% per
+// day). Only readable once the site's day headers are hidden: a hidden
+// cell's computed width is its specified one.
+export const dayColumnWidth = (table: TransfersTable): string | null => {
+  const width = getComputedStyle(table.templates.header).width;
+  return width.endsWith("%") ? width : null;
 };
 
 const isSiteCell = (cell: Element) => !cell.hasAttribute(EXT_DAY_ATTR);
@@ -62,7 +77,11 @@ export const findTransfersTables = (
     );
 
     tables.push({
+      head: headerRow.parentElement as HTMLTableSectionElement,
       headerRow,
+      navRow: table.querySelector<HTMLTableRowElement>(
+        `thead tr[${EXT_NAV_ATTR}]`
+      ),
       gameweek,
       siteDayColumns,
       otherHeaders: cells.filter(

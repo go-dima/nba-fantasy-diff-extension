@@ -1,4 +1,18 @@
-import { Bootstrap, Fixture, findGameweekPhase } from "./schedule";
+// The NBA Fantasy site's API: endpoints, response shapes (only the fields
+// we use) and naming conventions. Update here when the API changes.
+
+export type Team = { id: number; code: number; name: string };
+
+export type Bootstrap = {
+  events: { id: number; deadline_time_epoch: number }[];
+  phases: { id: number; name: string; start_event: number; stop_event: number }[];
+  teams: Team[];
+};
+
+export type Fixture = { event: number; team_h: number; team_a: number };
+
+export const findGameweekPhase = (bootstrap: Bootstrap, gameweek: number) =>
+  bootstrap.phases.find((phase) => phase.name === `Gameweek ${gameweek}`);
 
 export type WeekData = { bootstrap: Bootstrap; fixtures: Fixture[] };
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { cells, transfersTable } from "./__fixtures__/transfers";
-import { EXT_DAY_ATTR, EXT_NAV_ATTR, findTransfersTables } from "./transfers";
+import { EXT_DAY_ATTR, EXT_NAV_ATTR, findTransfersTables, teamLogoUrl } from "./transfers";
 
 const { DASH, logo } = cells;
 
@@ -18,6 +18,8 @@ describe("findTransfersTables", () => {
     expect(rest).toHaveLength(0);
     expect(table.gameweek).toBe(3);
     expect(table.siteDayColumns).toEqual([5, 6, 7, 8, 9]);
+    expect(table.navRow).toBeNull();
+    expect(table.head.tagName).toBe("THEAD");
     expect(table.otherHeaders.map((th) => th.textContent?.trim())).toEqual(["", "Front Court", "SS", "F", "TP"]);
     expect(table.rows.map((r) => r.teamCode)).toEqual([1610612737]);
     expect(table.templates.header.textContent).toBe("GW3.1");
@@ -48,11 +50,17 @@ describe("findTransfersTables", () => {
     const [table] = findTransfersTables();
     expect(table.gameweek).toBe(2);
     expect(table.headerRow.hasAttribute(EXT_NAV_ATTR)).toBe(false);
+    expect(table.navRow).toBe(nav);
+    expect(table.head).toBe(thead);
   });
 
   test("ignores tables without GW day headers", () => {
     document.body.innerHTML = `<table><thead><tr><th>Rank</th><th>TOT</th></tr></thead></table>`;
 
     expect(findTransfersTables()).toEqual([]);
+  });
+
+  test("builds team logo URLs like the site's", () => {
+    expect(teamLogoUrl(1610612753)).toBe("//cdn.nba.com/logos/nba/1610612753/global/L/logo.svg");
   });
 });

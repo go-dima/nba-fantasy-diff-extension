@@ -1,4 +1,4 @@
-import { EXT_NAV_ATTR, TransfersTable } from "../locators";
+import { EXT_NAV_ATTR, TransfersTable, dayColumnWidth } from "../locators";
 
 export type NavState = {
   gameweek: number;
@@ -23,14 +23,12 @@ const STYLES = {
   DISABLED: "opacity: 0.35; cursor: default;",
 };
 
-// The table has a fixed layout and this becomes its first row, which
-// sets the column widths. The leading cells are clones that keep their
-// widths; the days cell must take the share of `days` day columns. The
-// site's day header is hidden, so its computed width is the specified
-// one (e.g. "12%").
+// The nav row becomes the table's first row, which sets the column
+// widths: the leading cells are clones that keep theirs, and the days
+// cell takes the share of `days` day columns.
 const daysWidth = (table: TransfersTable, days: number) => {
-  const width = getComputedStyle(table.templates.header).width;
-  return width.endsWith("%") ? ` width: calc(${width} * ${days});` : "";
+  const width = dayColumnWidth(table);
+  return width ? ` width: calc(${width} * ${days});` : "";
 };
 
 const button = (
@@ -110,12 +108,10 @@ export const renderNav = (
   actions: NavActions,
   days: number
 ) => {
-  const { headerRow } = table;
-  const thead = headerRow.parentElement!;
-  let row = thead.querySelector<HTMLTableRowElement>(`tr[${EXT_NAV_ATTR}]`);
+  let row = table.navRow;
   if (!row) {
     row = createNavRow(table, actions, days);
-    thead.insertBefore(row, headerRow);
+    table.head.insertBefore(row, table.headerRow);
   }
 
   const find = <T extends HTMLElement>(role: string) =>

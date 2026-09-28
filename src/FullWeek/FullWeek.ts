@@ -1,4 +1,9 @@
-import { EXT_DAY_ATTR, TransfersTable, findTransfersTables } from "../locators";
+import {
+  EXT_DAY_ATTR,
+  TransfersTable,
+  findTransfersTables,
+  teamLogoUrl,
+} from "../locators";
 import {
   DAYS_PER_WEEK,
   Day,
@@ -20,9 +25,6 @@ const STYLES = {
   PAST_DAY: "filter: grayscale(100%) opacity(50%);",
   MISSING_DAY: "text-decoration: line-through; opacity: 50%;",
 };
-
-const logoUrl = (code: number) =>
-  `//cdn.nba.com/logos/nba/${code}/global/L/logo.svg`;
 
 // Grey "x" in the style of the site's no-game dash, for days outside the gameweek
 const noDayMark = () => {
@@ -75,7 +77,7 @@ const renderCell = (table: TransfersTable, day: Day, teamCode: number | null) =>
   opponents.forEach(({ code, name }) => {
     const img = (templates.logo?.cloneNode(false) ??
       Object.assign(document.createElement("img"), { width: 30 })) as HTMLImageElement;
-    img.src = logoUrl(code);
+    img.src = teamLogoUrl(code);
     img.alt = name;
     td.append(img);
   });
