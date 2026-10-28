@@ -60,6 +60,12 @@ describe("findTransfersTables", () => {
     expect(findTransfersTables()).toEqual([]);
   });
 
+  test("ignores the player view's schedule table", () => {
+    document.body.innerHTML = `<table><thead><tr><th>GW2.1</th><th>GW2.2</th></tr></thead><tbody><tr><td></td><td></td></tr></tbody></table>`;
+
+    expect(findTransfersTables()).toEqual([]);
+  });
+
   test("builds team logo URLs like the site's", () => {
     expect(teamLogoUrl(1610612753)).toBe("//cdn.nba.com/logos/nba/1610612753/global/L/logo.svg");
   });

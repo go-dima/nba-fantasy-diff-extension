@@ -60,7 +60,9 @@ export const findTransfersTables = (
       .map((th, index) => ({ th, index }))
       .filter(({ th }) => isSiteCell(th) && DAY_HEADER.test(th.textContent?.trim() ?? ""))
       .map(({ index }) => index);
-    if (!siteDayColumns.length) return;
+    // The player view's schedule table has only day columns; the squad
+    // tables also have player and stat columns
+    if (!siteDayColumns.length || siteDayColumns.length === cells.length) return;
 
     const header = cells[siteDayColumns[0]];
     const gameweek = Number(header.textContent!.trim().match(DAY_HEADER)![1]);
