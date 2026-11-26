@@ -5,3 +5,4 @@ export * from "./standings";
 export * from "./transfers";
 export * from "./playerList";
 export * from "./playerView";
+export * from "./playerMarkers";
